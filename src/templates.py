@@ -324,3 +324,62 @@ class text(element):
     def blit(self, screen:pg.Surface):
         newx = {'left': 0, 'center': self.surface.get_width()/2, 'right': self.surface.get_width()}
         screen.blit(self.surface, (self.x-newx[self.alignment], self.y))
+
+class forced_multiline_text(text):
+    '''
+    text box class that does line wrapping
+
+    despite the description of the text class, this inherits the text class
+
+    ### Attributes:
+        `surface`: surface of element
+
+        `text`: text of textbox (updating this does NOT update the text, use `updatetext()` instead)
+
+        `z`: z-index for layering
+
+        `alignment`: alignment of text, can be 'left', 'center', or 'right'
+
+        `font`: either the name of the font (fonts directory is searched first, then sysfont) or a `pg.font.Font` object
+
+        `color`: color of text, can be `str` or `tuple`
+
+        `size`: size of text, overridden if `font` is a `pg.font.Font` object
+
+        `x`, `y`: position of top left corner
+
+        `pos`: (`x`, `y`)
+
+        `w`, `h`: width and height of `surface`
+
+        `max_width`: maximum width of text box in in-game pixels
+
+    ### Methods:
+        `updatetext(text)`: sets the text to be displayed
+
+        `get_rect()`: returns `pg.Rect` object where `self.surface` should be
+
+        `blit(screen)`: blitted according to text alignment: 'left' is top left corner, 'center' is center, 'right' is top right corner
+    '''
+    def __init__(self, z:int, text:str, align:str, pos:tuple, max_width, font, color, size:float=16) -> None:
+        self.max_width = max_width
+        super().__init__(z, text, align, pos, font, color, size)
+    def updatetext(self, text: str):
+        ls = []
+        for l in text.split('\n'):
+            ls.append(l)
+            while self.font.size(ls[-1])[0]>self.max_width:
+                t_l = ls[-1]
+                ls[-1] = ''
+                ws = t_l.split(' ')
+                for i in range(len(ws)):
+                    if self.font.size(ls[-1]+ws[i])[0]<=self.max_width:
+                        ls[-1] += ws[i]+' '
+                    else:
+                        ls[-1] = ls[-1].rstrip()
+                        ls.append(' '.join(ws[i:]))
+                        break
+        newtext = ''
+        for l in ls:
+            newtext += l+'\n'
+        super().updatetext(newtext)
