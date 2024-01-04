@@ -39,6 +39,5 @@ def get_audio(soundname:str):
 
 # S_MUSIC = os.path.join(os.path.dirname(__file__), 'sounds', 'music.mp3')
 
-# when uncommenting this, also uncomment corresponding line in main.py
-# WINDOW_ICON = generate_surface('screenicon.png', 32, 32)
+
 

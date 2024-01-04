@@ -11,6 +11,7 @@ def main():
     pg.init()
 
     screen = pg.display.set_mode((TRUE_WIDTH, TRUE_HEIGHT))
+    # WINDOW_ICON = generate_surface('screenicon.png', 32, 32)
     # pg.display.set_icon(WINDOW_ICON)
     pg.display.set_caption(WINDOW_TITLE)
     clock = pg.time.Clock()
