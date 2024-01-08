@@ -126,19 +126,17 @@ class physicsobject(collidable):
 
 class button(element):
     '''
-    base class for buttons
+    base class for buttons, subclass of `element`
 
     ### Attributes:
         `pressed`: whether or not button is pressed
-
-    ### Methods:
-        `collidepoint(pos)`: returns `True` if `pos` is within `self.get_rect()`, `False` otherwise
-
-        `pressed_behavior()`: called when button is pressed (by default, sets `self.pressed` to `False`)
+        
+        `pressed_behavior`: function called when button is pressed
     '''
-    def __init__(self, z: int, surf: pg.Surface, pos) -> None:
+    def __init__(self, z: int, surf: pg.Surface, pos, pressed_behavior) -> None:
         super().__init__(z, surf, pos)
         self.pressed = False
+        self.pressed_behavior = pressed_behavior
     def collidepoint(self, pos):
         return self.get_rect().collidepoint((pos[0], pos[1]))
     def process_input(self, inpt: pg.event.Event):
@@ -148,10 +146,10 @@ class button(element):
                 self.pressed = True
         elif inpt.type==pg.MOUSEBUTTONUP and inpt.button==1:
             self.pressed = False
-    def pressed_behavior(self):
-        self.pressed = False
     def step(self):
-        if self.pressed: self.pressed_behavior()
+        if self.pressed:
+            self.pressed = False
+            self.pressed_behavior()
 
 class scene(object):
     '''
