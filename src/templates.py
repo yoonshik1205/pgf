@@ -144,8 +144,6 @@ class button(element):
             truepos = (inpt.pos[0]/TRUE_WIDTH*WIDTH-self.parent_scene.x, inpt.pos[1]/TRUE_HEIGHT*HEIGHT-self.parent_scene.y)
             if self.collidepoint(truepos):
                 self.pressed = True
-        elif inpt.type==pg.MOUSEBUTTONUP and inpt.button==1:
-            self.pressed = False
     def step(self):
         if self.pressed:
             self.pressed = False
