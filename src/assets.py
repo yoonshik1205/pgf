@@ -1,11 +1,5 @@
-import os
-import pygame as pg
-
 from src.consts import *
 
-pg.mixer.pre_init(channels=8)
-pg.init()
-pg.display.set_mode((WIDTH, HEIGHT))
 
 def generate_surface(imagename: str, w:float, h:float):
     '''

@@ -1,10 +1,4 @@
-import pygame as pg
-import os
-
-from src.consts import *
 from src.utils import *
-
-pg.init()
 
 # objects
 
@@ -30,9 +24,11 @@ class element(object):
 
         `blit(screen)`: blits `self.surface` to `screen` at `x`, `y` by default
 
-        `step()`: called every frame, used for updating element state (empty by default)
+        `step(dt)`: called every frame, used for updating element state (empty by default)
 
-        `process_input(inpt)`: called when user input or events need to be processed (empty by default)
+        `handle_resize()`: called when window is resized (empty by default)
+
+        `process_input(inpt)`: called when user input or events need to be processed
 
         `collisioncheck(other)`: returns `True` if `self` and `other` are colliding, `False` otherwise (uses `get_rect()` by default)
     '''
@@ -60,10 +56,13 @@ class element(object):
         return pg.Rect(self.x, self.y, self.w, self.h)
     def blit(self, screen:pg.Surface):
         screen.blit(self.surface, (self.x, self.y))
-    def step(self):
+    def step(self, dt:float):
+        pass
+    def handle_resize(self):
         pass
     def process_input(self, inpt:pg.event.Event):
-        pass
+        if inpt.type==pg.USEREVENT and inpt.msg=='window_resize':
+            self.handle_resize()
     def collisioncheck(self, other:'element'):
         return self.get_rect().colliderect(other.get_rect())
 
@@ -100,7 +99,7 @@ class physicsobject(collidable):
 
         `collided_behavior(other)`: called when `self` collides with `other` (empty by default)
 
-        `physics_step()`: always call this function every step to update position
+        `physics_step(dt)`: always call this function every step to update position
     '''
     def __init__(self, mass:float=1, v_init=(0,0), push_others:bool=False) -> None:
         super().__init__(push_others)
@@ -113,13 +112,13 @@ class physicsobject(collidable):
         pass
     def collided_behavior(self, other:collidable):
         pass
-    def physics_step(self):
+    def physics_step(self, dt:float):
         self.calculate_a()
-        self.pos += self.v*TICK + self.a*(TICK**2/2)
-        self.v += self.a*TICK
+        self.pos += self.v*dt + self.a*(dt**2/2)
+        self.v += self.a*dt
         for p in self.parent_scene.pushers:
             if p.pushes(self):
-                self.pos -= self.v*TICK - self.a*(TICK**2/2)
+                self.pos -= self.v*dt - self.a*(dt**2/2)
                 self.v = vector(0, 0)
                 self.collided_behavior(p)
                 break
@@ -140,25 +139,26 @@ class button(element):
     def collidepoint(self, pos):
         return self.get_rect().collidepoint((pos[0], pos[1]))
     def process_input(self, inpt: pg.event.Event):
+        super().process_input(inpt)
         if inpt.type==pg.MOUSEBUTTONDOWN and inpt.button==1:
-            truepos = (inpt.pos[0]/TRUE_WIDTH*WIDTH-self.parent_scene.x, inpt.pos[1]/TRUE_HEIGHT*HEIGHT-self.parent_scene.y)
+            truepos = (inpt.pos[0]/scfg.TRUE_WIDTH*scfg.WIDTH-self.parent_scene.x, inpt.pos[1]/scfg.TRUE_HEIGHT*scfg.HEIGHT-self.parent_scene.y)
             if self.collidepoint(truepos):
                 self.pressed = True
-    def step(self):
+    def step(self, dt:float):
         if self.pressed:
             self.pressed = False
             self.pressed_behavior()
 
-class scene(object):
+class scene(element):
     '''
-    base class for scenes
+    base class for scenes, subclass of element
     
     scenes are isolated environments that contain elements
 
     ### Attributes:
         `elements`: list of elements contained within scene, sorted by z
 
-        `size`: tuple of width and height
+        `w`, `h`: width and height, gets overridden if custom surface is given
 
         `bgcolor`: background color
 
@@ -166,7 +166,7 @@ class scene(object):
 
         `x`, `y`: position of top left corner
 
-        `env`: the surface of the scene itself
+        `surface`: the surface of the scene itself
 
         `physics`: whether or not physics is enabled
 
@@ -175,21 +175,30 @@ class scene(object):
     ### Methods:
         `add_element(elem)`: adds `elem` to `self.elements`
 
+        `handle_resize()`: default behavior is to scale the background and position if a root scene and nothing otherwise
+
         `process_input(inpt)`: for when user input or events need to be processed (empty by default)
 
         `blit(screen)`: blits
 
-        `step()`: calls `step()` on all elements by default
+        `step(dt)`: calls `step(dt)` on all elements by default
     '''
-    def __init__(self, size:tuple, elems:list, bgcolor, pos=(0,0), physics:bool=False) -> None:
+    def __init__(self, size:tuple, elems:list, bgcolor, pos=(0,0), z:int=-1, surf:pg.Surface=None, physics:bool=False) -> None:
         self.elements = elems
         for e in self.elements: e.parent_scene = self
         self.elements.sort(key=lambda x:x.z)
-        self.size = size
-        self.bgcolor = bgcolor
-        if isinstance(pos, vector): self.pos = pos
-        else: self.pos = vector(pos)
-        self.env = pg.Surface(size, pg.SRCALPHA)
+
+        self.parent_scene = None
+        if surf==None:
+            self.init_env = pg.Surface(size, pg.SRCALPHA)
+            self.init_env.fill(bgcolor)
+        else:
+            self.init_env = surf
+        self.scaled_init_env = self.init_env.convert_alpha()
+        super().__init__(z, self.init_env.convert_alpha(), pos)
+        self._w, self._h = self.w, self.h
+        self._x, self._y = self.pos.tuple
+
         self.physics = physics
         self.pushers = []
         if physics:
@@ -215,14 +224,23 @@ class scene(object):
         self.elements.sort(key=lambda x:x.z)
         if self.physics and isinstance(elem, collidable) and elem.push_others:
             self.pushers.append(elem)
+    def handle_resize(self):
+        if self.parent_scene!=None: return
+        _scaled_wh = (self._w * scfg.WINDOW_W_SCALE, self._h * scfg.WINDOW_H_SCALE)
+        _scaled_xy = (self._x * scfg.WINDOW_W_SCALE, self._y * scfg.WINDOW_H_SCALE)
+        self.scaled_init_env = pg.transform.scale(self.init_env, _scaled_wh)
+        self.w, self.h = _scaled_wh
+        self.x, self.y = _scaled_xy
     def process_input(self, inpt:pg.event.Event):
+        super().process_input(inpt)
         for e in self.elements: e.process_input(inpt)
     def blit(self, screen:pg.Surface):
-        self.env.fill(self.bgcolor)
-        for e in self.elements: e.blit(self.env)
-        screen.blit(pg.transform.scale(self.env, (self.size[0]/WIDTH*TRUE_WIDTH, self.size[1]/HEIGHT*TRUE_HEIGHT)), (self.x/WIDTH*TRUE_WIDTH, self.y/HEIGHT*TRUE_HEIGHT))
-    def step(self):
-        for e in self.elements: e.step()
+        self.surface = self.scaled_init_env
+        for e in self.elements: e.blit(self.surface)
+        if self.parent_scene==None: screen.blit(pg.transform.scale(self.surface, (self.w*scfg.SCALE_FACTOR, self.h*scfg.SCALE_FACTOR)), (self.x*scfg.SCALE_FACTOR, self.y*scfg.SCALE_FACTOR))
+        else: screen.blit(self.surface, (self.x, self.y))
+    def step(self, dt:float):
+        for e in self.elements: e.step(dt)
 
 class gametemplate(object):
     '''
@@ -234,7 +252,7 @@ class gametemplate(object):
     ### Methods:
         `process_input(inpt)`: calls `process_input()` on all active scenes
 
-        `step()`: calls `step()` on all active scenes
+        `step(dt)`: calls `step(dt)` on all active scenes
 
         `update_screen(screen)`: blits all active scenes to `screen` and updates display
 
@@ -244,8 +262,8 @@ class gametemplate(object):
         self.curscenes = []
     def process_input(self, inpt:pg.event.Event):
         for s in self.curscenes: s.process_input(inpt)
-    def step(self):
-        for s in self.curscenes: s.step()
+    def step(self, dt:float):
+        for s in self.curscenes: s.step(dt)
     def update_screen(self, screen:pg.Surface):
         for s in self.curscenes: s.blit(screen)
         pg.display.flip()

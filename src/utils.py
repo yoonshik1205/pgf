@@ -1,38 +1,35 @@
-import pygame as pg
+from src.assets import *
 
-pg.init()
-
-import numpy as np
 
 def xy_to_theta(x:float, y:float) -> float:
     '''
     converts (x, y) vector to direction in radians
     '''
     if x==0 and y==0: return 0
-    return np.arctan2(y, x)
+    return math.atan2(y, x)
 
 def theta_to_xy(theta:float, scale:float=1) -> tuple[float,float]:
     '''
     converts direction in radians to (x, y) vector of length `scale`(default 1)
     '''
-    return (np.cos(theta)*scale, np.sin(theta)*scale)
+    return (math.cos(theta)*scale, math.sin(theta)*scale)
 
 def theta_within_range(theta:float):
     '''
     converts `theta` to a value between 0 and 2pi
     '''
     if theta < 0:
-        false_rounds = (-theta)//(2*np.pi)+1
-        theta += false_rounds*2*np.pi
-    if theta >= 2*np.pi:
-        theta %= 2*np.pi
+        false_rounds = (-theta)//(2*math.pi)+1
+        theta += false_rounds*2*math.pi
+    if theta >= 2*math.pi:
+        theta %= 2*math.pi
     return theta
 
 def dist(p1, p2):
     '''
     returns distance between two points given in tuple or vector form
     '''
-    return np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
+    return math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
 
 class vector(object):
     '''
@@ -113,6 +110,41 @@ def post_event(msg:str, data:dict={}):
     payload = {'msg':msg}
     payload.update(data)
     pg.event.post(pg.event.Event(pg.USEREVENT, payload))
+
+def quitgame():
+    '''
+    Call this function to quit the game.
+    '''
+    pg.event.post(pg.event.Event(pg.QUIT))
+
+def set_scaling(scaling:float):
+    '''
+    Call this function to change the scaling of the entire game.
+    '''
+    scfg.SCALE_FACTOR = scaling
+    post_event('window_resize')
+
+def toggle_fullscreen():
+    '''
+    Call this function to toggle fullscreen. According to pygame, this may not work sometimes.
+    '''
+    pg.display.toggle_fullscreen()
+
+
+def write_savefile(filename:str, content:str):
+    assert SAVE_DIR != '', 'save directory not specified'
+    with open(os.path.expanduser(f'~/Documents/{SAVE_DIR}/{filename}'), 'w') as f:
+        f.write(content)
+
+def read_savefile(filename:str):
+    assert SAVE_DIR != '', 'save directory not specified'
+    with open(os.path.expanduser(f'~/Documents/{SAVE_DIR}/{filename}')) as f:
+        return f.read()
+    
+def list_savefiles():
+    assert SAVE_DIR != '', 'save directory not specified'
+    for fn in os.listdir(os.path.expanduser(f'~/Documents/{SAVE_DIR}')):
+        yield fn
 
 
 # custom util functions

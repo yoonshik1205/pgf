@@ -1,21 +1,38 @@
+import os
+import math
 import pygame as pg
 
+pg.mixer.pre_init(channels=8)
 pg.init()
 
 # necessary constants
 
 WINDOW_TITLE = 'Game'
 
-# window size in terms of in-game pixels
-WIDTH = 1500
-HEIGHT = 1000
+INIT_TRUE_WIDTH = 900
+INIT_TRUE_HEIGHT = 600
 
-# window size in terms of actual pixels
-TRUE_WIDTH = 1500
-TRUE_HEIGHT = 1500
+class _cfg(object):
+    def __init__(self):
+        # window size in terms of actual pixels
+        self.TRUE_WIDTH = INIT_TRUE_WIDTH
+        self.TRUE_HEIGHT = INIT_TRUE_HEIGHT
+
+        # window size in terms of in-game pixels
+        self.SCALE_FACTOR = 1.
+        self.WIDTH = self.TRUE_WIDTH / self.SCALE_FACTOR
+        self.HEIGHT = self.TRUE_HEIGHT / self.SCALE_FACTOR
+
+        # how much the window size changed from the initial value
+        self.WINDOW_W_SCALE = 1.
+        self.WINDOW_H_SCALE = 1.
+
+scfg = _cfg()
 
 TPS = 60
 TICK = 1/TPS
+
+SAVE_DIR = '' # save folder name inside documents
 
 
 # custom constants

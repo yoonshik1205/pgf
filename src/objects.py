@@ -1,12 +1,4 @@
-import pygame as pg
-
-from src.utils import *
-from src.consts import *
-from src.assets import *
 from src.templates import *
-
-pg.mixer.pre_init(channels=8)
-pg.init()
 
 # game objects
 
@@ -15,8 +7,9 @@ pg.init()
 class game(gametemplate):
     def __init__(self) -> None:
         super().__init__()
-        self.s0 = None
+        
         # declare scenes here
+        self.s0 = scene((scfg.WIDTH, scfg.HEIGHT), [], (127,127,127))
 
         self.curscenes = [self.s0]
         # pg.mixer.music.load(S_MUSIC)
