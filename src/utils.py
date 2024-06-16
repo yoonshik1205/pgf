@@ -157,6 +157,7 @@ def load_cfg() -> settings:
         with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'rb') as f:
             _scfg = pickle.load(f)
         scfg.__dict__.update(_scfg.__dict__)
+        post_event('window_resize')
     except FileNotFoundError: return
 
 
