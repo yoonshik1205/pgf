@@ -173,7 +173,8 @@ class button(element):
     def process_input(self, inpt: pg.event.Event):
         super().process_input(inpt)
         if inpt.type==pg.MOUSEBUTTONDOWN and inpt.button==1:
-            truepos = (inpt.pos[0]/scfg.TRUE_WIDTH*scfg.WIDTH-self.parent_scene.x, inpt.pos[1]/scfg.TRUE_HEIGHT*scfg.HEIGHT-self.parent_scene.y)
+            truepos = ((inpt.pos[0]/scfg.SCALE_FACTOR-self.parent_scene.true_x)/self.parent_scene.total_w_scale,
+                        (inpt.pos[1]/scfg.SCALE_FACTOR-self.parent_scene.true_y)/self.parent_scene.total_h_scale)
             if self.collidepoint(truepos):
                 self.pressed = True
     def step(self, dt:float):
@@ -256,6 +257,22 @@ class scene(element):
     @property
     def h_scale(self):
         return self.h / self._h
+    @property
+    def total_w_scale(self):
+        if self.parent_scene==None: return self.w_scale
+        else: return self.parent_scene.total_w_scale * self.w_scale
+    @property
+    def total_h_scale(self):
+        if self.parent_scene==None: return self.h_scale
+        else: return self.parent_scene.total_h_scale * self.h_scale
+    @property
+    def true_x(self):
+        if self.parent_scene==None: return self.x
+        else: return self.parent_scene.true_x + self.parent_scene.total_w_scale * self.x
+    @property
+    def true_y(self):
+        if self.parent_scene==None: return self.y
+        else: return self.parent_scene.true_y + self.parent_scene.total_h_scale * self.y
         
     def add_element(self, elem:element):
         elem.parent_scene = self
