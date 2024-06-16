@@ -8,6 +8,8 @@ def main():
     pg.display.set_caption(WINDOW_TITLE)
     clock = pg.time.Clock()
 
+    load_cfg()
+
     g = game()
     dt = TICK
     cont = True

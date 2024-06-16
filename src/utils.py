@@ -132,19 +132,31 @@ def toggle_fullscreen():
 
 
 def write_savefile(filename:str, content:str):
-    assert SAVE_DIR != '', 'save directory not specified'
-    with open(os.path.expanduser(f'~/Documents/{SAVE_DIR}/{filename}'), 'w') as f:
+    assert GAME_DIR != '', 'game directory not specified'
+    with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/saves/{filename}'), 'w') as f:
         f.write(content)
 
 def read_savefile(filename:str):
-    assert SAVE_DIR != '', 'save directory not specified'
-    with open(os.path.expanduser(f'~/Documents/{SAVE_DIR}/{filename}')) as f:
+    assert GAME_DIR != '', 'game directory not specified'
+    with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/saves/{filename}')) as f:
         return f.read()
     
 def list_savefiles():
-    assert SAVE_DIR != '', 'save directory not specified'
-    for fn in os.listdir(os.path.expanduser(f'~/Documents/{SAVE_DIR}')):
+    assert GAME_DIR != '', 'game directory not specified'
+    for fn in os.listdir(os.path.expanduser(f'~/Documents/{GAME_DIR}/saves')):
         yield fn
+
+def save_cfg():
+    assert GAME_DIR != '', 'game directory not specified'
+    with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'w') as j:
+        json.dump(scfg.cfg, j)
+
+def load_cfg():
+    if GAME_DIR=='': return
+    try:
+        with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'w') as j:
+            scfg.cfg = json.load(j)
+    except FileNotFoundError: return
 
 
 # custom util functions

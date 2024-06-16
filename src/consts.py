@@ -1,5 +1,6 @@
 import os
 import math
+import json
 import pygame as pg
 
 pg.mixer.pre_init(channels=8)
@@ -27,12 +28,14 @@ class _cfg(object):
         self.WINDOW_W_SCALE = 1.
         self.WINDOW_H_SCALE = 1.
 
+        self.cfg = {}
+
 scfg = _cfg()
 
 TPS = 60
 TICK = 1/TPS
 
-SAVE_DIR = '' # save folder name inside documents
+GAME_DIR = '' # save folder name inside documents
 
 
 # custom constants
