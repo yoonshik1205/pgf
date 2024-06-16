@@ -10,7 +10,7 @@ def main():
 
     load_cfg()
 
-    g = game()
+    g = game(screen)
     dt = TICK
     cont = True
     while cont:

@@ -1,4 +1,3 @@
-from pygame import Surface
 from src.utils import *
 
 # objects
@@ -96,8 +95,8 @@ class element(object):
         if inpt.type==pg.USEREVENT and inpt.msg=='window_resize':
             self.handle_resize()
         elif self.pressable and inpt.type==pg.MOUSEBUTTONDOWN and inpt.button==1:
-            truepos = ((inpt.pos[0]/scfg.SCALE_FACTOR-self.parent_scene.true_x)/self.parent_scene.total_w_scale,
-                        (inpt.pos[1]/scfg.SCALE_FACTOR-self.parent_scene.true_y)/self.parent_scene.total_h_scale)
+            truepos = (inpt.pos[0]/scfg.SCALE_FACTOR-self.parent_scene.true_x,
+                        inpt.pos[1]/scfg.SCALE_FACTOR-self.parent_scene.true_y)
             if self.collidepoint(truepos):
                 self.pressed = True
     def collisioncheck(self, other:'element'):
@@ -256,21 +255,13 @@ class scene(element):
     def h_scale(self):
         return self.h / self._h
     @property
-    def total_w_scale(self):
-        if self.parent_scene==None: return self.w_scale
-        else: return self.parent_scene.total_w_scale * self.w_scale
-    @property
-    def total_h_scale(self):
-        if self.parent_scene==None: return self.h_scale
-        else: return self.parent_scene.total_h_scale * self.h_scale
-    @property
     def true_x(self):
         if self.parent_scene==None: return self.x
-        else: return self.parent_scene.true_x + self.parent_scene.total_w_scale * self.x
+        else: return self.parent_scene.true_x + self.x
     @property
     def true_y(self):
         if self.parent_scene==None: return self.y
-        else: return self.parent_scene.true_y + self.parent_scene.total_h_scale * self.y
+        else: return self.parent_scene.true_y + self.y
         
     def add_element(self, elem:element):
         elem.parent_scene = self
@@ -282,16 +273,18 @@ class scene(element):
         if self.parent_scene!=None:
             super().handle_resize()
         else:
-            _scaled_wh = (self._w * scfg.WINDOW_W_SCALE, self._h * scfg.WINDOW_H_SCALE)
-            _scaled_xy = (self._x * scfg.WINDOW_W_SCALE, self._y * scfg.WINDOW_H_SCALE)
+            _scaled_wh = (self._w * scfg.WINDOW_W_SCALE / scfg.SCALE_FACTOR, self._h * scfg.WINDOW_H_SCALE / scfg.SCALE_FACTOR)
+            _scaled_xy = (self._x * scfg.WINDOW_W_SCALE / scfg.SCALE_FACTOR, self._y * scfg.WINDOW_H_SCALE / scfg.SCALE_FACTOR)
             self.scaled_init_env = pg.transform.scale(self.init_env, _scaled_wh)
+            self.surface = self.scaled_init_env.convert_alpha()
             self.w, self.h = _scaled_wh
             self.x, self.y = _scaled_xy
+        for e in self.elements: e.handle_resize()
     def process_input(self, inpt:pg.event.Event):
         super().process_input(inpt)
         for e in self.elements: e.process_input(inpt)
     def blit(self, screen:pg.Surface):
-        self.surface = self.scaled_init_env
+        self.surface.blit(self.scaled_init_env, (0, 0))
         for e in self.elements: e.blit(self.surface)
         if self.parent_scene==None: screen.blit(pg.transform.scale(self.surface, (self.w*scfg.SCALE_FACTOR, self.h*scfg.SCALE_FACTOR)), (self.x*scfg.SCALE_FACTOR, self.y*scfg.SCALE_FACTOR))
         else: screen.blit(self.surface, (self.x, self.y))
@@ -315,8 +308,9 @@ class gametemplate(object):
 
         `cleanup()`: called when game is closed (empty by default)
     '''
-    def __init__(self) -> None:
+    def __init__(self, screen_ref:pg.Surface) -> None:
         self.curscenes = []
+        self.screen_ref = screen_ref
     def process_input(self, inpt:pg.event.Event):
         for s in self.curscenes: s.process_input(inpt)
     def step(self, dt:float):
@@ -361,8 +355,8 @@ class text(element):
 
         `blit(screen)`: blitted according to text alignment: 'left' is top left corner, 'center' is center, 'right' is top right corner
     '''
-    def __init__(self, z:int, text:str, align:str, pos:tuple, font, color, size:float=16, anchor:str='topleft') -> None:
-        super().__init__(z, pg.Surface((0, 0)), pos, anchor)
+    def __init__(self, z:int, text:str, align:str, pos:tuple, font, color, size:float=16, anchor:str='topleft', pressed_behavior=None) -> None:
+        super().__init__(z, pg.Surface((0, 0)), pos, anchor, pressed_behavior)
         assert align in {'left', 'center', 'right'}, "incorrect text alignment"
         self.alignment = align
         if isinstance(font, str):
@@ -432,9 +426,9 @@ class forced_multiline_text(text):
 
         `blit(screen)`: blitted according to text alignment: 'left' is top left corner, 'center' is center, 'right' is top right corner
     '''
-    def __init__(self, z:int, text:str, align:str, pos:tuple, max_width, font, color, size:float=16, anchor:str='topleft') -> None:
+    def __init__(self, z:int, text:str, align:str, pos:tuple, max_width, font, color, size:float=16, anchor:str='topleft', pressed_behavior=None) -> None:
         self.max_width = max_width
-        super().__init__(z, text, align, pos, font, color, size, anchor)
+        super().__init__(z, text, align, pos, font, color, size, anchor, pressed_behavior)
     def updatetext(self, text: str):
         ls = []
         for l in text.split('\n'):
