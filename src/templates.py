@@ -23,12 +23,18 @@ class element(object):
 
         `parent_scene`: scene that contains element
 
+        `pressed_behavior`: function to call when this element is pressed
+
+        `pressable`: boolean of whether there is a pressed behavior
+
     ### Methods:
         `get_rect()`: returns `pg.Rect` object with `x`, `y`, `w`, `h` attributes by default
 
         `blit(screen)`: blits `self.surface` to `screen` at `x`, `y` by default
 
-        `step(dt)`: called every frame, used for updating element state (empty by default)
+        `collidepoint(pos)`: returns whether a point in parent scene coordinates is inside the element
+
+        `step(dt)`: called every frame, used for updating element state, only handles presses by default
 
         `handle_resize()`: called when window is resized, by default it scales the anchor positions and not the offsets
 
@@ -36,7 +42,7 @@ class element(object):
 
         `collisioncheck(other)`: returns `True` if `self` and `other` are colliding, `False` otherwise (uses `get_rect()` by default)
     '''
-    def __init__(self, z:int, surf:pg.Surface, pos, anchor:str='topleft') -> None:
+    def __init__(self, z:int, surf:pg.Surface, pos, anchor:str='topleft', pressed_behavior=None) -> None:
         assert anchor in ["topleft", "top", "topright", "left", "center", "right", "bottomleft", "bottom", "bottomright"]
         self.anchor = anchor
         _iax = 0 if 'left' in anchor else (scfg.WIDTH if 'right' in anchor else scfg.WIDTH//2)
@@ -50,6 +56,15 @@ class element(object):
         self.z = z
         self.w, self.h = surf.get_size()
         self.parent_scene = None
+        
+        self.pressed = False
+        if pressed_behavior == None:
+            self.pressed_behavior = lambda: None
+            self.pressable = False
+        else:
+            self.pressed_behavior = pressed_behavior
+            self.pressable = True
+
     @property
     def x(self):
         return self.pos.x
@@ -67,8 +82,12 @@ class element(object):
         return pg.Rect(self.x, self.y, self.w, self.h)
     def blit(self, screen:pg.Surface):
         screen.blit(self.surface, (self.x, self.y))
+    def collidepoint(self, pos):
+        return self.get_rect().collidepoint((pos[0], pos[1]))
     def step(self, dt:float):
-        pass
+        if self.pressable and self.pressed:
+            self.pressed = False
+            self.pressed_behavior()
     def handle_resize(self):
         iax, iay = self.init_anchor_pos.tuple
         anchor_pos = vector(iax * self.parent_scene.w_scale, iay * self.parent_scene.h_scale)
@@ -76,6 +95,11 @@ class element(object):
     def process_input(self, inpt:pg.event.Event):
         if inpt.type==pg.USEREVENT and inpt.msg=='window_resize':
             self.handle_resize()
+        elif self.pressable and inpt.type==pg.MOUSEBUTTONDOWN and inpt.button==1:
+            truepos = ((inpt.pos[0]/scfg.SCALE_FACTOR-self.parent_scene.true_x)/self.parent_scene.total_w_scale,
+                        (inpt.pos[1]/scfg.SCALE_FACTOR-self.parent_scene.true_y)/self.parent_scene.total_h_scale)
+            if self.collidepoint(truepos):
+                self.pressed = True
     def collisioncheck(self, other:'element'):
         return self.get_rect().colliderect(other.get_rect())
     
@@ -155,32 +179,6 @@ class physicsobject(collidable):
                 self.collided_behavior(p)
                 break
 
-class button(element):
-    '''
-    base class for buttons, subclass of `element`
-
-    ### Attributes:
-        `pressed`: whether or not button is pressed
-        
-        `pressed_behavior`: function called when button is pressed
-    '''
-    def __init__(self, z: int, surf: pg.Surface, pos, pressed_behavior, anchor:str='topleft') -> None:
-        super().__init__(z, surf, pos, anchor)
-        self.pressed = False
-        self.pressed_behavior = pressed_behavior
-    def collidepoint(self, pos):
-        return self.get_rect().collidepoint((pos[0], pos[1]))
-    def process_input(self, inpt: pg.event.Event):
-        super().process_input(inpt)
-        if inpt.type==pg.MOUSEBUTTONDOWN and inpt.button==1:
-            truepos = ((inpt.pos[0]/scfg.SCALE_FACTOR-self.parent_scene.true_x)/self.parent_scene.total_w_scale,
-                        (inpt.pos[1]/scfg.SCALE_FACTOR-self.parent_scene.true_y)/self.parent_scene.total_h_scale)
-            if self.collidepoint(truepos):
-                self.pressed = True
-    def step(self, dt:float):
-        if self.pressed:
-            self.pressed = False
-            self.pressed_behavior()
 
 class scene(element):
     '''
@@ -298,6 +296,7 @@ class scene(element):
         if self.parent_scene==None: screen.blit(pg.transform.scale(self.surface, (self.w*scfg.SCALE_FACTOR, self.h*scfg.SCALE_FACTOR)), (self.x*scfg.SCALE_FACTOR, self.y*scfg.SCALE_FACTOR))
         else: screen.blit(self.surface, (self.x, self.y))
     def step(self, dt:float):
+        super().step(dt)
         for e in self.elements: e.step(dt)
 
 class gametemplate(object):
