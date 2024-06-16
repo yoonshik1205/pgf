@@ -29,5 +29,7 @@ def main():
         g.step(dt)
         g.update_screen(screen)
         dt = clock.tick(TPS) / 1000
+
+    save_cfg()
     g.cleanup()
     pg.quit()

@@ -147,15 +147,16 @@ def list_savefiles():
         yield fn
 
 def save_cfg():
-    assert GAME_DIR != '', 'game directory not specified'
-    with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'w') as j:
-        json.dump(scfg.cfg, j)
+    if GAME_DIR=='': return
+    with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'wb') as f:
+        pickle.dump(scfg, f)
 
-def load_cfg():
+def load_cfg() -> settings:
     if GAME_DIR=='': return
     try:
-        with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'w') as j:
-            scfg.cfg = json.load(j)
+        with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'rb') as f:
+            _scfg = pickle.load(f)
+        scfg.__dict__.update(_scfg.__dict__)
     except FileNotFoundError: return
 
 

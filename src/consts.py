@@ -1,6 +1,6 @@
 import os
 import math
-import json
+import pickle
 import pygame as pg
 
 pg.mixer.pre_init(channels=8)
@@ -13,7 +13,7 @@ WINDOW_TITLE = 'Game'
 INIT_TRUE_WIDTH = 900
 INIT_TRUE_HEIGHT = 600
 
-class _cfg(object):
+class settings(object):
     def __init__(self):
         # window size in terms of actual pixels
         self.TRUE_WIDTH = INIT_TRUE_WIDTH
@@ -30,7 +30,7 @@ class _cfg(object):
 
         self.cfg = {}
 
-scfg = _cfg()
+scfg = settings()
 
 TPS = 60
 TICK = 1/TPS
