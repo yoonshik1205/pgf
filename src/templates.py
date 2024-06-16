@@ -1,3 +1,4 @@
+from pygame import Surface
 from src.utils import *
 
 # objects
@@ -77,6 +78,25 @@ class element(object):
             self.handle_resize()
     def collisioncheck(self, other:'element'):
         return self.get_rect().colliderect(other.get_rect())
+    
+class sprite(element):
+    '''
+    like `element`, but defined with multiple surfaces so it's easier to switch
+
+    if `surf_names` is provided as a list with the same length as `surfs`, then each surface can be set using the names
+
+    `set_surf(idx_or_name)` is called to change the surface
+    '''
+    def __init__(self, z:int, surfs:list, pos, anchor:str='topleft', surf_names:list=[]) -> None:
+        super().__init__(z, surfs[0], pos, anchor)
+        self.surfs = surfs
+        if len(surf_names)==len(surfs):
+            self.surfs_name = {nm:surf for nm, surf in zip(surf_names, surfs)}
+    def set_surf(self, idx_or_name:int|str):
+        if isinstance(idx_or_name, int):
+            self.surface = self.surfs[idx_or_name]
+        else:
+            self.surface = self.surfs_name[idx_or_name]
 
 class collidable(object):
     '''
