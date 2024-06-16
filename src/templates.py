@@ -12,6 +12,9 @@ class element(object):
         `x`, `y`: position
         
         `pos`: vector of `x` and `y`
+
+        `anchor`: the position to anchor the offset from when scaling the parent scene,
+        one of "topleft", "top", "topright", "left", "center", "right", "bottomleft", "bottom", "bottomright"
         
         `z`: z-index for layering
         
@@ -26,16 +29,23 @@ class element(object):
 
         `step(dt)`: called every frame, used for updating element state (empty by default)
 
-        `handle_resize()`: called when window is resized (empty by default)
+        `handle_resize()`: called when window is resized, by default it scales the anchor positions and not the offsets
 
         `process_input(inpt)`: called when user input or events need to be processed
 
         `collisioncheck(other)`: returns `True` if `self` and `other` are colliding, `False` otherwise (uses `get_rect()` by default)
     '''
-    def __init__(self, z:int, surf:pg.Surface, pos) -> None:
+    def __init__(self, z:int, surf:pg.Surface, pos, anchor:str='topleft') -> None:
+        assert anchor in ["topleft", "top", "topright", "left", "center", "right", "bottomleft", "bottom", "bottomright"]
+        self.anchor = anchor
+        _iax = 0 if 'left' in anchor else (scfg.WIDTH if 'right' in anchor else scfg.WIDTH//2)
+        _iay = 0 if 'top' in anchor else (scfg.HEIGHT if 'bottom' in anchor else scfg.HEIGHT//2)
+        self.init_anchor_pos = vector(_iax, _iay)
+
         self.surface = surf
         if isinstance(pos, vector): self.pos = pos
         else: self.pos = vector(pos)
+        self.anchor_offset = self.pos - self.init_anchor_pos
         self.z = z
         self.w, self.h = surf.get_size()
         self.parent_scene = None
@@ -59,7 +69,9 @@ class element(object):
     def step(self, dt:float):
         pass
     def handle_resize(self):
-        pass
+        iax, iay = self.init_anchor_pos.tuple
+        anchor_pos = vector(iax * self.parent_scene.w_scale, iay * self.parent_scene.h_scale)
+        self.pos = anchor_pos + self.anchor_offset
     def process_input(self, inpt:pg.event.Event):
         if inpt.type==pg.USEREVENT and inpt.msg=='window_resize':
             self.handle_resize()
@@ -132,8 +144,8 @@ class button(element):
         
         `pressed_behavior`: function called when button is pressed
     '''
-    def __init__(self, z: int, surf: pg.Surface, pos, pressed_behavior) -> None:
-        super().__init__(z, surf, pos)
+    def __init__(self, z: int, surf: pg.Surface, pos, pressed_behavior, anchor:str='topleft') -> None:
+        super().__init__(z, surf, pos, anchor)
         self.pressed = False
         self.pressed_behavior = pressed_behavior
     def collidepoint(self, pos):
@@ -175,7 +187,7 @@ class scene(element):
     ### Methods:
         `add_element(elem)`: adds `elem` to `self.elements`
 
-        `handle_resize()`: default behavior is to scale the background and position if a root scene and nothing otherwise
+        `handle_resize()`: default behavior is to scale the background and position if a root scene and scale position like an element otherwise
 
         `process_input(inpt)`: for when user input or events need to be processed (empty by default)
 
@@ -183,7 +195,7 @@ class scene(element):
 
         `step(dt)`: calls `step(dt)` on all elements by default
     '''
-    def __init__(self, size:tuple, elems:list, bgcolor, pos=(0,0), z:int=-1, surf:pg.Surface=None, physics:bool=False) -> None:
+    def __init__(self, size:tuple, elems:list, bgcolor, pos=(0,0), z:int=-1, surf:pg.Surface=None, anchor:str='topleft', physics:bool=False) -> None:
         self.elements = elems
         for e in self.elements: e.parent_scene = self
         self.elements.sort(key=lambda x:x.z)
@@ -195,7 +207,7 @@ class scene(element):
         else:
             self.init_env = surf
         self.scaled_init_env = self.init_env.convert_alpha()
-        super().__init__(z, self.init_env.convert_alpha(), pos)
+        super().__init__(z, self.init_env.convert_alpha(), pos, anchor)
         self._w, self._h = self.w, self.h
         self._x, self._y = self.pos.tuple
 
@@ -217,6 +229,13 @@ class scene(element):
     @y.setter
     def y(self, val):
         self.pos.y = val
+
+    @property
+    def w_scale(self):
+        return self.w / self._w
+    @property
+    def h_scale(self):
+        return self.h / self._h
         
     def add_element(self, elem:element):
         elem.parent_scene = self
@@ -225,12 +244,14 @@ class scene(element):
         if self.physics and isinstance(elem, collidable) and elem.push_others:
             self.pushers.append(elem)
     def handle_resize(self):
-        if self.parent_scene!=None: return
-        _scaled_wh = (self._w * scfg.WINDOW_W_SCALE, self._h * scfg.WINDOW_H_SCALE)
-        _scaled_xy = (self._x * scfg.WINDOW_W_SCALE, self._y * scfg.WINDOW_H_SCALE)
-        self.scaled_init_env = pg.transform.scale(self.init_env, _scaled_wh)
-        self.w, self.h = _scaled_wh
-        self.x, self.y = _scaled_xy
+        if self.parent_scene!=None:
+            super().handle_resize()
+        else:
+            _scaled_wh = (self._w * scfg.WINDOW_W_SCALE, self._h * scfg.WINDOW_H_SCALE)
+            _scaled_xy = (self._x * scfg.WINDOW_W_SCALE, self._y * scfg.WINDOW_H_SCALE)
+            self.scaled_init_env = pg.transform.scale(self.init_env, _scaled_wh)
+            self.w, self.h = _scaled_wh
+            self.x, self.y = _scaled_xy
     def process_input(self, inpt:pg.event.Event):
         super().process_input(inpt)
         for e in self.elements: e.process_input(inpt)
@@ -304,8 +325,8 @@ class text(element):
 
         `blit(screen)`: blitted according to text alignment: 'left' is top left corner, 'center' is center, 'right' is top right corner
     '''
-    def __init__(self, z:int, text:str, align:str, pos:tuple, font, color, size:float=16) -> None:
-        super().__init__(z, pg.Surface((0, 0)), pos)
+    def __init__(self, z:int, text:str, align:str, pos:tuple, font, color, size:float=16, anchor:str='topleft') -> None:
+        super().__init__(z, pg.Surface((0, 0)), pos, anchor)
         assert align in {'left', 'center', 'right'}, "incorrect text alignment"
         self.alignment = align
         if isinstance(font, str):
@@ -375,9 +396,9 @@ class forced_multiline_text(text):
 
         `blit(screen)`: blitted according to text alignment: 'left' is top left corner, 'center' is center, 'right' is top right corner
     '''
-    def __init__(self, z:int, text:str, align:str, pos:tuple, max_width, font, color, size:float=16) -> None:
+    def __init__(self, z:int, text:str, align:str, pos:tuple, max_width, font, color, size:float=16, anchor:str='topleft') -> None:
         self.max_width = max_width
-        super().__init__(z, text, align, pos, font, color, size)
+        super().__init__(z, text, align, pos, font, color, size, anchor)
     def updatetext(self, text: str):
         ls = []
         for l in text.split('\n'):
