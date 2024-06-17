@@ -279,7 +279,6 @@ class scene(element):
             self.surface = self.scaled_init_env.convert_alpha()
             self.w, self.h = _scaled_wh
             self.x, self.y = _scaled_xy
-        for e in self.elements: e.handle_resize()
     def process_input(self, inpt:pg.event.Event):
         super().process_input(inpt)
         for e in self.elements: e.process_input(inpt)
