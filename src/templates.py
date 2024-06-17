@@ -1,5 +1,7 @@
 from src.utils import *
 
+load_cfg()
+
 # objects
 
 class element(object):
