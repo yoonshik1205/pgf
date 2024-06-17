@@ -148,13 +148,13 @@ def list_savefiles():
 
 def save_cfg():
     if GAME_DIR=='': return
-    with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'wb') as f:
+    with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg'), 'wb') as f:
         pickle.dump(scfg, f)
 
 def load_cfg() -> settings:
     if GAME_DIR=='': return
     try:
-        with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg.json'), 'rb') as f:
+        with open(os.path.expanduser(f'~/Documents/{GAME_DIR}/cfg'), 'rb') as f:
             _scfg = pickle.load(f)
         scfg.__dict__.update(_scfg.__dict__)
         post_event('window_resize')
