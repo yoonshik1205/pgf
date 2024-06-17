@@ -24,8 +24,8 @@ class esc_menu(scene):
             text(1, 'Toggle Fullscreen', 'center', (100, 150), fontname, textcolor, pressed_behavior=toggle_fullscreen),
             text(1, 'Quit Game', 'center', (100, 200), fontname, textcolor, pressed_behavior=quitgame)
         ]
-        self.menu = scene((200, 400), elems, bgcolor, (scfg.WIDTH//2-100, scfg.HEIGHT//2-200), anchor='center')
-        super().__init__((scfg.WIDTH, scfg.HEIGHT), [self.menu], (0, 0, 0))
+        self.menu = scene((200, 400), elems, bgcolor, (init_scfg.WIDTH//2-100, init_scfg.HEIGHT//2-200), anchor='center')
+        super().__init__((init_scfg.WIDTH, init_scfg.HEIGHT), [self.menu], (0, 0, 0))
     def update_scale(self, new_scale:float):
         if new_scale < self.scales[0] or new_scale > self.scales[-1]: return
         closest_idx = 3
@@ -59,7 +59,7 @@ class game(gametemplate):
         
         self.esc = esc_menu()
         # declare scenes here
-        self.s0 = scene((scfg.WIDTH, scfg.HEIGHT), [], (127,127,127))
+        self.s0 = scene((init_scfg.WIDTH, init_scfg.HEIGHT), [], (127,127,127))
 
 
         self.curscenes = [self.s0]

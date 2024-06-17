@@ -31,6 +31,7 @@ class settings(object):
         self.cfg = {}
 
 scfg = settings()
+init_scfg = settings()
 
 TPS = 60
 TICK = 1/TPS

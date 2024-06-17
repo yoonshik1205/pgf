@@ -44,8 +44,8 @@ class element(object):
     def __init__(self, z:int, surf:pg.Surface, pos, anchor:str='topleft', pressed_behavior=None) -> None:
         assert anchor in ["topleft", "top", "topright", "left", "center", "right", "bottomleft", "bottom", "bottomright"]
         self.anchor = anchor
-        _iax = 0 if 'left' in anchor else (scfg.WIDTH if 'right' in anchor else scfg.WIDTH//2)
-        _iay = 0 if 'top' in anchor else (scfg.HEIGHT if 'bottom' in anchor else scfg.HEIGHT//2)
+        _iax = 0 if 'left' in anchor else (init_scfg.WIDTH if 'right' in anchor else init_scfg.WIDTH//2)
+        _iay = 0 if 'top' in anchor else (init_scfg.HEIGHT if 'bottom' in anchor else init_scfg.HEIGHT//2)
         self.init_anchor_pos = vector(_iax, _iay)
 
         self.surface = surf
