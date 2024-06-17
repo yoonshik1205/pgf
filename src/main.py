@@ -2,6 +2,8 @@ from src.objects import *
 
 
 def main():
+    load_cfg()
+
     screen = pg.display.set_mode((scfg.TRUE_WIDTH, scfg.TRUE_HEIGHT), pg.RESIZABLE, vsync=1)
     # WINDOW_ICON = generate_surface('screenicon.png', 32, 32)
     # pg.display.set_icon(WINDOW_ICON)
