@@ -36,6 +36,7 @@ TPS = 60
 TICK = 1/TPS
 
 GAME_DIR = '' # save folder name inside documents
+if GAME_DIR != '': os.makedirs(os.path.expanduser(f'~/Documents/{GAME_DIR}/saves'), exist_ok=True)
 
 
 # custom constants
