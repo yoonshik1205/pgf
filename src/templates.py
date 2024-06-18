@@ -54,7 +54,7 @@ class element(object):
         self.anchor_offset = self.pos - self.init_anchor_pos
         self.z = z
         self.w, self.h = surf.get_size()
-        self.parent_scene = None
+        self._parent_scene = None
         
         self.pressed = False
         if pressed_behavior == None:
@@ -63,6 +63,17 @@ class element(object):
         else:
             self.pressed_behavior = pressed_behavior
             self.pressable = True
+
+    @property
+    def parent_scene(self):
+        return self._parent_scene
+    @parent_scene.setter
+    def parent_scene(self, val):
+        self._parent_scene = val
+        _iax = 0 if 'left' in self.anchor else (val._w if 'right' in self.anchor else val._w/2)
+        _iay = 0 if 'top' in self.anchor else (val._h if 'bottom' in self.anchor else val._h/2)
+        self.init_anchor_pos = vector(_iax, _iay)
+        self.anchor_offset = self.pos - self.init_anchor_pos
 
     @property
     def x(self):
