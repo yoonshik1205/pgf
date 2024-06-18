@@ -294,6 +294,7 @@ class scene(element):
         super().process_input(inpt)
         for e in self.elements: e.process_input(inpt)
     def blit(self, screen:pg.Surface):
+        self.surface.fill((0,0,0,0))
         self.surface.blit(self.scaled_init_env, (0, 0))
         for e in self.elements: e.blit(self.surface)
         if self.parent_scene==None: screen.blit(pg.transform.scale(self.surface, (self.w*scfg.SCALE_FACTOR, self.h*scfg.SCALE_FACTOR)), (self.x*scfg.SCALE_FACTOR, self.y*scfg.SCALE_FACTOR))
