@@ -229,7 +229,7 @@ class scene(element):
         for e in self.elements: e.parent_scene = self
         self.elements.sort(key=lambda x:x.z)
 
-        self.parent_scene = None
+        self._parent_scene = None
         if surf==None:
             self.init_env = pg.Surface(size, pg.SRCALPHA)
             self.init_env.fill(bgcolor)
