@@ -225,10 +225,6 @@ class scene(element):
         `step(dt)`: calls `step(dt)` on all elements by default
     '''
     def __init__(self, size:tuple, elems:list, bgcolor, pos=(0,0), z:int=-1, surf:pg.Surface=None, anchor:str='topleft', physics:bool=False) -> None:
-        self.elements = elems
-        for e in self.elements: e.parent_scene = self
-        self.elements.sort(key=lambda x:x.z)
-
         self._parent_scene = None
         if surf==None:
             self.init_env = pg.Surface(size, pg.SRCALPHA)
@@ -239,6 +235,10 @@ class scene(element):
         super().__init__(z, self.init_env.convert_alpha(), pos, anchor)
         self._w, self._h = self.w, self.h
         self._x, self._y = self.pos.tuple
+
+        self.elements = elems
+        for e in self.elements: e.parent_scene = self
+        self.elements.sort(key=lambda x:x.z)
 
         self.physics = physics
         self.pushers = []
