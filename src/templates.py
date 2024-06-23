@@ -458,4 +458,4 @@ class forced_multiline_text(text):
         newtext = ''
         for l in ls:
             newtext += l+'\n'
-        super().updatetext(newtext)
+        super().updatetext(newtext.strip())

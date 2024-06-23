@@ -32,4 +32,3 @@ def main():
 
     save_cfg()
     g.cleanup()
-    pg.quit()
