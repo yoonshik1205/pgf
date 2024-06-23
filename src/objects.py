@@ -75,7 +75,7 @@ class game(gametemplate):
         super().process_input(inpt)
         if not self.paused and inpt.type==pg.KEYDOWN and inpt.key==pg.K_ESCAPE:
             self.temp_curscenes = self.curscenes
-            self.esc.init_env = pg.transform.scale(self.screen_ref, (INIT_TRUE_WIDTH, INIT_TRUE_HEIGHT))
+            self.esc.init_env = pg.transform.smoothscale(self.screen_ref, (INIT_TRUE_WIDTH, INIT_TRUE_HEIGHT))
             self.curscenes = [self.esc]
             post_event('window_resize')
             self.paused = True

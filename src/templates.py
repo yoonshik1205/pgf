@@ -286,7 +286,7 @@ class scene(element):
         else:
             _scaled_wh = (self._w * scfg.WINDOW_W_SCALE / scfg.SCALE_FACTOR, self._h * scfg.WINDOW_H_SCALE / scfg.SCALE_FACTOR)
             _scaled_xy = (self._x * scfg.WINDOW_W_SCALE / scfg.SCALE_FACTOR, self._y * scfg.WINDOW_H_SCALE / scfg.SCALE_FACTOR)
-            self.scaled_init_env = pg.transform.scale(self.init_env, _scaled_wh)
+            self.scaled_init_env = pg.transform.smoothscale(self.init_env, _scaled_wh)
             self.surface = self.scaled_init_env.convert_alpha()
             self.w, self.h = _scaled_wh
             self.x, self.y = _scaled_xy
@@ -297,7 +297,7 @@ class scene(element):
         self.surface.fill((0,0,0,0))
         self.surface.blit(self.scaled_init_env, (0, 0))
         for e in self.elements: e.blit(self.surface)
-        if self.parent_scene==None: screen.blit(pg.transform.scale(self.surface, (self.w*scfg.SCALE_FACTOR, self.h*scfg.SCALE_FACTOR)), (self.x*scfg.SCALE_FACTOR, self.y*scfg.SCALE_FACTOR))
+        if self.parent_scene==None: screen.blit(pg.transform.smoothscale(self.surface, (self.w*scfg.SCALE_FACTOR, self.h*scfg.SCALE_FACTOR)), (self.x*scfg.SCALE_FACTOR, self.y*scfg.SCALE_FACTOR))
         else: screen.blit(self.surface, (self.x, self.y))
     def step(self, dt:float):
         super().step(dt)
