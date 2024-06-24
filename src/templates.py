@@ -41,7 +41,7 @@ class element(object):
 
         `collisioncheck(other)`: returns `True` if `self` and `other` are colliding, `False` otherwise (uses `get_rect()` by default)
     '''
-    def __init__(self, z:int, surf:pg.Surface, pos, anchor:str='topleft', pressed_behavior=None) -> None:
+    def __init__(self, z:int, surf:pg.Surface, pos:vector|tuple[float,float], anchor:str='topleft', pressed_behavior=None) -> None:
         assert anchor in ["topleft", "top", "topright", "left", "center", "right", "bottomleft", "bottom", "bottomright"]
         self.anchor = anchor
         _iax = 0 if 'left' in anchor else (init_scfg.WIDTH if 'right' in anchor else init_scfg.WIDTH//2)
@@ -54,7 +54,7 @@ class element(object):
         self.anchor_offset = self.pos - self.init_anchor_pos
         self.z = z
         self.w, self.h = surf.get_size()
-        self._parent_scene = None
+        self._parent_scene:'scene' = None
         
         self.pressed = False
         if pressed_behavior == None:
@@ -121,7 +121,7 @@ class sprite(element):
 
     `set_surf(idx_or_name)` is called to change the surface
     '''
-    def __init__(self, z:int, surfs:list, pos, anchor:str='topleft', surf_names:list=[]) -> None:
+    def __init__(self, z:int, surfs:list[pg.Surface], pos:vector|tuple[float,float], anchor:str='topleft', surf_names:list[str]=[]) -> None:
         super().__init__(z, surfs[0], pos, anchor)
         self.surfs = surfs
         if len(surf_names)==len(surfs):
@@ -167,7 +167,7 @@ class physicsobject(collidable):
 
         `physics_step(dt)`: always call this function every step to update position
     '''
-    def __init__(self, mass:float=1, v_init=(0,0), push_others:bool=False) -> None:
+    def __init__(self, mass:float=1, v_init:vector|tuple[float,float]=(0,0), push_others:bool=False) -> None:
         super().__init__(push_others)
         if isinstance(v_init, vector): self.v = v_init
         else: self.v = vector(v_init)
@@ -224,8 +224,8 @@ class scene(element):
 
         `step(dt)`: calls `step(dt)` on all elements by default
     '''
-    def __init__(self, size:tuple, elems:list, bgcolor, pos=(0,0), z:int=-1, surf:pg.Surface=None, anchor:str='topleft', physics:bool=False) -> None:
-        self._parent_scene = None
+    def __init__(self, size:tuple[float,float], elems:list[element], bgcolor, pos:vector|tuple[float,float]=(0,0), z:int=-1, surf:pg.Surface=None, anchor:str='topleft', physics:bool=False) -> None:
+        self._parent_scene:scene = None
         if surf==None:
             self.init_env = pg.Surface(size, pg.SRCALPHA)
             self.init_env.fill(bgcolor)
@@ -241,7 +241,7 @@ class scene(element):
         self.elements.sort(key=lambda x:x.z)
 
         self.physics = physics
-        self.pushers = []
+        self.pushers:list[collidable] = []
         if physics:
             for e in self.elements:
                 if isinstance(e, collidable) and e.push_others:
@@ -320,7 +320,7 @@ class gametemplate(object):
         `cleanup()`: called when game is closed (empty by default)
     '''
     def __init__(self, screen_ref:pg.Surface) -> None:
-        self.curscenes = []
+        self.curscenes:list[scene] = []
         self.screen_ref = screen_ref
     def process_input(self, inpt:pg.event.Event):
         for s in self.curscenes: s.process_input(inpt)
@@ -366,7 +366,7 @@ class text(element):
 
         `blit(screen)`: blitted according to text alignment: 'left' is top left corner, 'center' is center, 'right' is top right corner
     '''
-    def __init__(self, z:int, text:str, align:str, pos:tuple, font, color, size:float=16, anchor:str='topleft', pressed_behavior=None) -> None:
+    def __init__(self, z:int, text:str, align:str, pos:tuple[float,float], font, color, size:float=16, anchor:str='topleft', pressed_behavior=None) -> None:
         super().__init__(z, pg.Surface((0, 0)), pos, anchor, pressed_behavior)
         assert align in {'left', 'center', 'right'}, "incorrect text alignment"
         self.alignment = align
@@ -437,7 +437,7 @@ class forced_multiline_text(text):
 
         `blit(screen)`: blitted according to text alignment: 'left' is top left corner, 'center' is center, 'right' is top right corner
     '''
-    def __init__(self, z:int, text:str, align:str, pos:tuple, max_width, font, color, size:float=16, anchor:str='topleft', pressed_behavior=None) -> None:
+    def __init__(self, z:int, text:str, align:str, pos:tuple[float,float], max_width:float, font, color, size:float=16, anchor:str='topleft', pressed_behavior=None) -> None:
         self.max_width = max_width
         super().__init__(z, text, align, pos, font, color, size, anchor, pressed_behavior)
     def updatetext(self, text: str):

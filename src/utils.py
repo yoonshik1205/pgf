@@ -42,7 +42,7 @@ class vector(object):
 
         `magnitude`: magnitude of vector
     '''
-    def __init__(self, arg1, arg2:float=1, polar:bool=False) -> None:
+    def __init__(self, arg1:float|tuple[float,float], arg2:float=1., polar:bool=False) -> None:
         if isinstance(arg1, tuple):
             if len(arg1)!=2: raise ValueError('tuple must have length 2')
             self.x, self.y = arg1
