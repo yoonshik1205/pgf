@@ -1,5 +1,6 @@
 from src.consts import *
 
+pg.display.set_mode((scfg.TRUE_WIDTH, scfg.TRUE_HEIGHT), pg.RESIZABLE, vsync=1)
 
 def generate_surface(imagename: str, w:float, h:float):
     '''
