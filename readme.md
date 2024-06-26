@@ -1,6 +1,4 @@
-# PGF: Pygame Game-making Framework
-
-it's for when you like pygame but you want to make an actual game with it
+# Pygame game-making framework (for personal use)
 
 ## Files and Directories
 
